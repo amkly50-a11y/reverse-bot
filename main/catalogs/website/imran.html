@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverse Bot Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg2: #141414;
+      --bg3: #1c1c1c;
+      --card: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --text: #f0f0f0;
+      --text2: #888;
+      --text3: #555;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 220px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      z-index: 100;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 700; color: var(--accent2);
+      margin-bottom: 32px; padding: 0 8px;
+    }
+    .logo span { font-size: 24px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      color: var(--text2); margin-bottom: 4px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: var(--bg3); color: var(--text);
+    }
+    .nav-item.active { color: var(--accent2); }
+    .nav-icon { font-size: 18px; width: 20px; text-align: center; }
+    .main { margin-left: 220px; padding: 32px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-title {
+      font-size: 24px; font-weight: 700;
+      margin-bottom: 8px; color: var(--text);
+    }
+    .page-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .stat-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--accent2); }
+    .stat-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; margin-bottom: 20px;
+    }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px; border-radius: 9px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #5a52d5; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 9px; padding: 10px 14px; color: var(--text);
+      font-size: 14px; font-family: inherit; outline: none;
+      transition: border 0.2s;
+    }
+    .input:focus { border-color: var(--accent); }
+    .input::placeholder { color: var(--text3); }
+    .textarea { min-height: 120px; resize: vertical; font-family: 'Courier New', monospace; font-size: 13px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: block; }
+    .toggle {
+      position: relative; width: 44px; height: 24px;
+      display: inline-block;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer;
+      top:0;left:0;right:0;bottom:0;
+      background: var(--bg3); border-radius: 24px;
+      transition: .3s; border: 1px solid var(--border);
+    }
+    .slider:before {
+      content:""; position:absolute;
+      height:18px; width:18px; left:2px; bottom:2px;
+      background:#fff; border-radius:50%; transition:.3s;
+    }
+    input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+    input:checked + .slider:before { transform: translateX(20px); }
+    .toggle-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 14px; font-weight: 500; }
+    .toggle-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .admin-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .admin-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg3); border-radius: 10px; padding: 10px 14px;
+      border: 1px solid var(--border);
+    }
+    .admin-uid { font-size: 13px; font-family: monospace; color: var(--accent2); }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-owner { background: #7c3aed22; color: #a78bfa; }
+    .badge-op { background: #0284c722; color: #38bdf8; }
+    .badge-admin { background: #15803d22; color: #4ade80; }
+    .cmd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 10px; }
+    .cmd-item {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cmd-name { font-size: 14px; font-weight: 600; }
+    .cmd-cat { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .cmd-desc { font-size: 12px; color: var(--text2); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 18px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; transform: translateY(100px); opacity: 0;
+      transition: all 0.3s; max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--green); }
+    .toast.error { border-color: var(--red); }
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text2); font-size: 13px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .sep { height: 1px; background: var(--border); margin: 20px 0; }
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; padding: 16px 8px; }
+      .sidebar .logo span:last-child, .nav-item span:last-child { display: none; }
+      .main { margin-left: 60px; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <span>🤖</span>
+    <span>Reverse Bot</span>
+  </div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)">
+    <span class="nav-icon">📊</span><span>Dashboard</span>
+  </div>
+  <div class="nav-item" onclick="showPage('admins',this)">
+    <span class="nav-icon">👑</span><span>Admins</span>
+  </div>
+  <div class="nav-item" onclick="showPage('commands',this)">
+    <span class="nav-icon">⚡</span><span>Commands</span>
+  </div>
+  <div class="nav-item" onclick="showPage('cookies',this)">
+    <span class="nav-icon">🍪</span><span>Cookies</span>
+  </div>
+  <div class="nav-item" onclick="showPage('settings',this)">
+    <span class="nav-icon">⚙️</span><span>Settings</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Live bot status and quick controls</div>
+    <div class="grid" id="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label"><span class="dot"></span>Status</div>
+        <div class="stat-value" id="s-status">Online</div>
+        <div class="stat-sub" id="s-pid">Loading...</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">⏱ Uptime</div>
+        <div class="stat-value" id="s-uptime">--</div>
+        <div class="stat-sub">Bot running time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💾 Memory</div>
+        <div class="stat-value" id="s-mem">--</div>
+        <div class="stat-sub">RAM usage</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔤 Prefix</div>
+        <div class="stat-value" id="s-prefix">-</div>
+        <div class="stat-sub" id="s-botname">reverse bot</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎛️ Quick Controls</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="restartBot()">🔄 Restart Bot</button>
+        <button class="btn btn-ghost" id="admin-only-btn" onclick="toggleAdminOnly()">🔒 Toggle Admin Only</button>
+        <button class="btn btn-ghost" onclick="loadStatus()">🔃 Refresh Status</button>
+      </div>
+      <div style="margin-top:16px;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">Admin Only Mode: </span>
+        <span id="admin-only-status" style="font-size:13px;font-weight:600;color:var(--green)">OFF</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMINS -->
+  <div id="page-admins" class="page">
+    <div class="page-title">Admin Management</div>
+    <div class="page-sub">Add or remove bot admins directly</div>
+    <div class="card">
+      <div class="card-title">👑 Owner</div>
+      <div class="admin-list" id="owner-list">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔵 Operators</div>
+      <div class="admin-list" id="operator-list">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🟢 Bot Admins</div>
+      <div class="admin-list" id="admin-list">Loading...</div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <input class="input" id="new-admin-uid" placeholder="Enter Facebook UID to add as admin" style="flex:1">
+        <button class="btn btn-success" onclick="addAdmin()">➕ Add Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMANDS -->
+  <div id="page-commands" class="page">
+    <div class="page-title">Commands Control</div>
+    <div class="page-sub">Enable or disable commands directly in groups</div>
+    <div class="filter-bar" id="cat-filters">
+      <button class="filter-btn active" onclick="filterCmds('all',this)">All</button>
+    </div>
+    <div class="cmd-grid" id="cmd-grid">Loading...</div>
+  </div>
+
+  <!-- COOKIES -->
+  <div id="page-cookies" class="page">
+    <div class="page-title">Cookie / Appstate Update</div>
+    <div class="page-sub">Paste your Facebook appstate JSON below to update login session</div>
+    <div class="card">
+      <div class="card-title">🍪 Current Appstate</div>
+      <div class="form-group">
+        <label class="form-label">Appstate JSON (paste from FCA tools or cookie extractor)</label>
+        <textarea class="input textarea" id="appstate-input" placeholder='[{"key":"c_user","value":"...","domain":".facebook.com",...}]'></textarea>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="loadAppstate()">📥 Load Current</button>
+        <button class="btn btn-success" onclick="saveAppstate()">💾 Save & Update</button>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:#15803d11;border:1px solid #22c55e33;border-radius:9px;font-size:13px;color:#4ade80">
+        ⚠️ After updating cookies, click "Restart Bot" in Dashboard to apply changes.
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="page-settings" class="page">
+    <div class="page-title">Bot Settings</div>
+    <div class="page-sub">Configure general bot options</div>
+    <div class="card">
+      <div class="card-title">⚙️ General Settings</div>
+      <div class="form-group">
+        <label class="form-label">Bot Name</label>
+        <input class="input" id="cfg-botname" placeholder="reverse bot">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Command Prefix</label>
+        <input class="input" id="cfg-prefix" placeholder="-" style="max-width:120px">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Language</label>
+        <select class="input" id="cfg-language" style="max-width:200px">
+          <option value="en">English</option>
+          <option value="vi">Vietnamese</option>
+        </select>
+      </div>
+      <div class="sep"></div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Developer Mode</div>
+          <div class="toggle-sub">Show detailed command logs</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-devmode" onchange="saveSetting('developermode',this.checked)"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Approval System</div>
+          <div class="toggle-sub">Groups must be approved to use bot</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-approval" onchange="saveSetting('approval',this.checked)"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Premium System</div>
+          <div class="toggle-sub">Enable premium commands</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="cfg-premium" onchange="saveSetting('premium',this.checked)"><span class="slider"></span></label>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveAllSettings()">💾 Save Settings</button>
+        <button class="btn btn-ghost" onclick="loadSettings()">🔃 Reload</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'admins') loadAdmins();
+  if (id === 'commands') loadCommands();
+  if (id === 'cookies') loadAppstate();
+  if (id === 'settings') loadSettings();
+}
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
+  t.className = 'toast show ' + type;
+  setTimeout(()=>{ t.classList.remove('show'); }, 3500);
+}
+
+async function api(url, opts={}) {
+  try {
+    const res = await fetch(url, {
+      headers: {'Content-Type':'application/json'},
+      ...opts
+    });
+    return await res.json();
+  } catch(e) {
+    return {success:false, error:e.message};
+  }
+}
+
+// === DASHBOARD ===
+let adminOnlyState = false;
+async function loadStatus() {
+  const d = await api('/api/status');
+  if (d.success) {
+    document.getElementById('s-uptime').textContent = d.uptime;
+    document.getElementById('s-mem').textContent = d.memory;
+    document.getElementById('s-prefix').textContent = d.prefix;
+    document.getElementById('s-botname').textContent = d.botName;
+    document.getElementById('s-pid').textContent = 'PID: ' + d.pid;
+    adminOnlyState = d.adminOnly;
+    document.getElementById('admin-only-status').textContent = d.adminOnly ? 'ON' : 'OFF';
+    document.getElementById('admin-only-status').style.color = d.adminOnly ? 'var(--yellow)' : 'var(--green)';
+    document.getElementById('admin-only-btn').textContent = d.adminOnly ? '🔓 Disable Admin Only' : '🔒 Enable Admin Only';
+  }
+}
+
+async function restartBot() {
+  const d = await api('/api/restart', {method:'POST'});
+  if (d.success) toast('Bot is restarting...');
+  else toast(d.error, 'error');
+}
+
+async function toggleAdminOnly() {
+  const d = await api('/api/toggle-admin-only', {method:'POST'});
+  if (d.success) {
+    adminOnlyState = d.adminOnly;
+    document.getElementById('admin-only-status').textContent = d.adminOnly ? 'ON' : 'OFF';
+    document.getElementById('admin-only-status').style.color = d.adminOnly ? 'var(--yellow)' : 'var(--green)';
+    document.getElementById('admin-only-btn').textContent = d.adminOnly ? '🔓 Disable Admin Only' : '🔒 Enable Admin Only';
+    toast('Admin Only mode ' + (d.adminOnly ? 'enabled' : 'disabled'));
+  } else toast(d.error, 'error');
+}
+
+// === ADMINS ===
+async function loadAdmins() {
+  const d = await api('/api/admins');
+  if (!d.success) return;
+  renderList('owner-list', d.OWNER, 'owner');
+  renderList('operator-list', d.OPERATOR.filter(x=>x), 'op');
+  renderList('admin-list', d.ADMINBOT, 'admin');
+}
+
+function renderList(elId, ids, type) {
+  const el = document.getElementById(elId);
+  if (!ids || ids.length === 0) { el.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">No entries</div>'; return; }
+  el.innerHTML = ids.map(id => `
+    <div class="admin-item">
+      <div>
+        <div class="admin-uid">${id}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge badge-${type}">${type === 'owner' ? 'Owner' : type === 'op' ? 'Operator' : 'Admin'}</span>
+        ${type === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="removeAdmin('${id}')">✕</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addAdmin() {
+  const uid = document.getElementById('new-admin-uid').value.trim();
+  if (!uid) return toast('Enter a UID', 'error');
+  const d = await api('/api/admins/add', {method:'POST', body:JSON.stringify({uid})});
+  if (d.success) {
+    toast('Admin added: ' + uid);
+    document.getElementById('new-admin-uid').value = '';
+    loadAdmins();
+  } else toast(d.error, 'error');
+}
+
+async function removeAdmin(uid) {
+  const d = await api('/api/admins/remove', {method:'POST', body:JSON.stringify({uid})});
+  if (d.success) { toast('Admin removed: ' + uid); loadAdmins(); }
+  else toast(d.error, 'error');
+}
+
+// === COMMANDS ===
+let allCmds = [];
+async function loadCommands() {
+  const d = await api('/api/commands');
+  if (!d.success) return;
+  allCmds = d.commands;
+  const cats = ['all', ...new Set(allCmds.map(c=>c.category).filter(Boolean))];
+  const bar = document.getElementById('cat-filters');
+  bar.innerHTML = cats.map((c,i) => `<button class="filter-btn${i===0?' active':''}" onclick="filterCmds('${c}',this)">${c.charAt(0).toUpperCase()+c.slice(1)}</button>`).join('');
+  renderCmds(allCmds);
+}
+
+function filterCmds(cat, el) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = cat === 'all' ? allCmds : allCmds.filter(c=>c.category===cat);
+  renderCmds(filtered);
+}
+
+function renderCmds(cmds) {
+  const grid = document.getElementById('cmd-grid');
+  grid.innerHTML = cmds.map(c => `
+    <div class="cmd-item">
+      <div style="flex:1;min-width:0">
+        <div class="cmd-name">${c.name || '?'}</div>
+        <div class="cmd-cat">${c.category || ''}</div>
+        <div class="cmd-desc" title="${c.description||''}">${c.description || ''}</div>
+      </div>
+      <label class="toggle" title="${c.enabled?'Click to disable':'Click to enable'}">
+        <input type="checkbox" ${c.enabled?'checked':''} onchange="toggleCmd('${c.name}',this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+async function toggleCmd(name, enabled) {
+  const d = await api('/api/commands/toggle', {method:'POST', body:JSON.stringify({name,enabled})});
+  if (d.success) toast(`${name} ${enabled?'enabled':'disabled'}`);
+  else toast(d.error, 'error');
+}
+
+// === COOKIES ===
+async function loadAppstate() {
+  const d = await api('/api/appstate');
+  if (d.success) {
+    document.getElementById('appstate-input').value = d.appstate;
+  } else toast(d.error, 'error');
+}
+
+async function saveAppstate() {
+  const raw = document.getElementById('appstate-input').value.trim();
+  if (!raw) return toast('Appstate is empty', 'error');
+  try { JSON.parse(raw); } catch(e) { return toast('Invalid JSON: ' + e.message, 'error'); }
+  const d = await api('/api/appstate', {method:'POST', body:JSON.stringify({appstate:raw})});
+  if (d.success) toast(d.message);
+  else toast(d.error, 'error');
+}
+
+// === SETTINGS ===
+async function loadSettings() {
+  const d = await api('/api/config');
+  if (!d.success) return;
+  const c = d.config;
+  document.getElementById('cfg-botname').value = c.BOTNAME || '';
+  document.getElementById('cfg-prefix').value = c.PREFIX || '-';
+  document.getElementById('cfg-language').value = c.language || 'en';
+  document.getElementById('cfg-devmode').checked = !!c.developermode;
+  document.getElementById('cfg-approval').checked = !!c.approval;
+  document.getElementById('cfg-premium').checked = !!c.premium;
+}
+
+async function saveSetting(key, val) {
+  const body = {};
+  body[key] = val;
+  const d = await api('/api/config', {method:'POST', body:JSON.stringify(body)});
+  if (d.success) toast(key + ' updated');
+  else toast(d.error, 'error');
+}
+
+async function saveAllSettings() {
+  const body = {
+    BOTNAME: document.getElementById('cfg-botname').value,
+    PREFIX: document.getElementById('cfg-prefix').value,
+    language: document.getElementById('cfg-language').value,
+    developermode: document.getElementById('cfg-devmode').checked,
+    approval: document.getElementById('cfg-approval').checked,
+    premium: document.getElementById('cfg-premium').checked,
+  };
+  const d = await api('/api/config', {method:'POST', body:JSON.stringify(body)});
+  if (d.success) toast('Settings saved!');
+  else toast(d.error, 'error');
+}
+
+// Init
+loadStatus();
+setInterval(loadStatus, 15000);
+</script>
+</body>
+</html>
