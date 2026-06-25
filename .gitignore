@@ -1,0 +1,6 @@
+node_modules/
+main/botdata/maindata.sqlite
+.local/
+*.log
+npm-debug.log*
+.env
